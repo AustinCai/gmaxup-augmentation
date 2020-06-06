@@ -1,3 +1,8 @@
+Code almost entirely from https://github.com/ildoonet/pytorch-randaugment.
+I expect to accumulate significant changes, but right now most code is identical to the source. 
+
+Everything below from the original repo ================================
+
 # pytorch-randaugment
 
 Unofficial PyTorch Reimplementation of RandAugment. Most of codes are from [Fast AutoAugment](https://github.com/kakaobrain/fast-autoaugment).
