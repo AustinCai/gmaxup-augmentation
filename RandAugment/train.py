@@ -1,4 +1,6 @@
-# sbatch batch.sh "RandAugment/train.py -c confs/best_cnn.yaml --tag runs -d saved_data/gmaxup_cifar-10-batches-py-orig-1l-1s-randaug_sim-6.05-20-15:50 -n randaug_sim"
+# sbatch batch.sh "RandAugment/train.py -c confs/best_cnn.yaml --tag runs"
+# sbatch batch.sh "RandAugment/train.py -c confs/best_cnn.yaml --tag runs -d saved_data/gmaxup_cifar-10-batches-py-orig-1l-1s-randaug_sim-6.05.20-15:50 -n randaug_sim"
+# sbatch batch.sh "RandAugment/train.py -c confs/best_cnn.yaml --tag runs -d saved_data/gmaxup_cifar-randaug_cache -n randaug_cache"
 
 import sys
 sys.path.append("/sailhome/acai21/mo_workspace/pytorch-randaugment")
@@ -30,6 +32,7 @@ from RandAugment.smooth_ce import SmoothCrossEntropyLoss
 import data_loading
 import numpy as np
 import datetime
+from data_loading import DatasetFromTupleList
 
 logger = get_logger('RandAugment')
 logger.setLevel(logging.INFO)

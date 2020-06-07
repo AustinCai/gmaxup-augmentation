@@ -11,6 +11,8 @@ import time
 # from util import Objects
 # from util import BasicTransforms
 import augmentations
+import sys
+from torch.utils.tensorboard import SummaryWriter
 
 class Objects:
     dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -77,11 +79,13 @@ def build_cifar10_ds(dataset_root_path="saved_data",
     transform functions. Because cifar10 is a built-in dataset, only the 
     dataset root path must be specified. 
     '''
+    
+    print(Path(__file__).parent.parent.resolve().parent.resolve() / dataset_root_path)
     train_ds = torchvision.datasets.CIFAR10(
-        Path(__file__).parent.parent.parent / dataset_root_path, 
+        Path(__file__).parent.parent.resolve().parent / dataset_root_path, 
         train=True, transform=train_transform, download=False)
     valid_test_ds = torchvision.datasets.CIFAR10(
-        Path(__file__).parent.parent.parent / dataset_root_path, 
+        Path(__file__).parent.parent.resolve().parent / dataset_root_path, 
         train=False, transform=test_transform, download=False)
     return train_ds, valid_test_ds
 
@@ -105,8 +109,10 @@ def build_mnist_ds(dataset_root_path="saved_data",
 def build_custom_cifar10_ds(dataset_path, 
     test_transform=BasicTransforms.pil_image_to_tensor):
 
+    print(Path(__file__).parent.parent.resolve().parent / dataset_path)
+
     print("before pickle load")
-    file = open(Path(__file__).parent.parent.parent / dataset_path, 'rb')
+    file = open(Path(__file__).parent.parent.resolve().parent / dataset_path, 'rb')
     print(file)
     train_ds = pickle.load(file)
     file.close()
@@ -116,7 +122,7 @@ def build_custom_cifar10_ds(dataset_path,
 
     return train_ds, valid_test_ds
 
-def build_dl(augmentation_str, dataset_str, shuffle=True, verbose=False): 
+def build_dl(augmentation_str, dataset_str, train_valid_split=0.85, shuffle=True, verbose=False): 
     '''Constructs and loads training and test dataloaders, which can be iterated 
     over to return one batch at a time. 
     '''
@@ -135,15 +141,21 @@ def build_dl(augmentation_str, dataset_str, shuffle=True, verbose=False):
     else:
         raise Exception("Invalid dataset path {}".format(dataset_str))
 
-    train_ds, valid_ds = torch.utils.data.random_split(
-        train_ds, [int(len(train_ds)*0.85), len(train_ds) - int(len(train_ds)*0.85)])
+
+    valid_dl = []
+    if train_valid_split < 1.0: 
+        train_ds, valid_ds = torch.utils.data.random_split(
+            train_ds, [int(len(train_ds)*train_valid_split), len(train_ds) - int(len(train_ds)*train_valid_split)])
+
+        valid_dl = torch.utils.data.DataLoader(
+            valid_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
+
     train_dl = torch.utils.data.DataLoader(
         train_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
-    valid_dl = torch.utils.data.DataLoader(
-        valid_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
+
     test_dl = torch.utils.data.DataLoader(
         valid_test_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
-    
+
     if verbose:
         print("In data_loading.build_dl() with dataset \'{}\' and augmentation \'{}\'.".format(
             dataset_str, augmentation_str))
@@ -233,7 +245,23 @@ class DatasetFromTupleList(Dataset):
 # =======================================================================================================
 
 def test():
-    pass
+
+    writer = SummaryWriter(log_dir='./runs/randaug_cache')
+
+    trainloader, _, _ = build_dl("randaugment", "cifar-10-batches-py", 1.00, shuffle=False)
+
+    augmented_batch = []
+    for i, (images, labels) in enumerate(trainloader):
+        for sample_num, (x, y) in enumerate(zip(images, labels)):
+            x_tens = x.squeeze().clone().cpu()
+            augmented_batch.append((x_tens, y.item()))
+
+    augmented_cifar10_ds = DatasetFromTupleList(augmented_batch)
+
+    with open(Path(__file__).parent.parent.resolve().parent / "saved_data" / "gmaxup_cifar-randaug_cache", 'wb') as handle:
+        pickle.dump(augmented_cifar10_ds, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print("DUMP COMPLETE")
 
 
 if __name__ == "__main__":

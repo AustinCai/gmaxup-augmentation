@@ -2,13 +2,13 @@
 model:
   type: best_cnn
 dataset: cifar10
-aug: 'none'
+aug: 'randaugment'
 randaug:
   N: 1
   M: 2    # from appendix
 cutout: 0
 batch: 128
-epoch: 15
+epoch: 50
 lr: 0.001
 lr_schedule:
   type: 'none'
