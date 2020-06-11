@@ -6,6 +6,8 @@ import torch.backends.cudnn as cudnn
 # from torchvision import models
 
 from RandAugment.networks.basic_models import BestCNN
+from RandAugment.networks.efficientnet import EfficientNet
+
 from RandAugment.networks.resnet import ResNet
 from RandAugment.networks.pyramidnet import PyramidNet
 from RandAugment.networks.shakeshake.shake_resnet import ShakeResNet
@@ -18,6 +20,8 @@ def get_model(conf, num_class=10):
 
     if name == 'best_cnn':
         model = BestCNN(num_class)
+    elif name == "efficientnet":
+        model = EfficientNet.from_pretrained('efficientnet-b0')
 
     elif name == 'resnet50':
         model = ResNet(dataset='imagenet', depth=50, num_classes=num_class, bottleneck=True)

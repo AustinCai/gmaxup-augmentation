@@ -3,7 +3,7 @@
 # sbatch batch.sh "RandAugment/train.py -c confs/best_cnn.yaml --tag runs -d saved_data/gmaxup_cifar-randaug_cache -n randaug_cache"
 
 import sys
-sys.path.append("/sailhome/acai21/mo_workspace/pytorch-randaugment")
+sys.path.append("/sailhome/acai21/mo_workspace/gmaxup-augmentation")
 
 import itertools
 import json
@@ -65,8 +65,8 @@ def run_epoch(model, loader, loss_fn, optimizer, desc_default='', epoch=0, write
 
         if optimizer:
             loss.backward()
-            # if C.get()['optimizer'].get('clip', 5) > 0:
-            #     nn.utils.clip_grad_norm_(model.parameters(), C.get()['optimizer'].get('clip', 5))
+            if C.get()['optimizer'].get('clip', 5) > 0:
+                nn.utils.clip_grad_norm_(model.parameters(), C.get()['optimizer'].get('clip', 5))
             optimizer.step()
 
         # eg. [00:13<00:00, 29.15it/s, loss=0.753, top1=0.736, top5=0.982, lr=0.001]
@@ -165,24 +165,24 @@ def train_and_eval(tag, dataroot, save_str, test_ratio=0.0, cv_fold=0, reporter=
     #     optimizer = LARS(optimizer)
     #     logger.info('*** LARS Enabled.')
 
-    scheduler = None
-    # lr_scheduler_type = C.get()['lr_schedule'].get('type', 'cosine')
-    # if lr_scheduler_type == 'cosine':
-    #     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=C.get()['epoch'], eta_min=0.)
-    # elif lr_scheduler_type == 'resnet':
-    #     scheduler = adjust_learning_rate_resnet(optimizer)
-    # elif lr_scheduler_type == 'none':
-    #     scheduler = None
-    # else:
-    #     raise ValueError('invalid lr_schduler=%s' % lr_scheduler_type)
+    # scheduler = None
+    lr_scheduler_type = C.get()['lr_schedule'].get('type', 'cosine')
+    if lr_scheduler_type == 'cosine':
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=C.get()['epoch'], eta_min=0.)
+    elif lr_scheduler_type == 'resnet':
+        scheduler = adjust_learning_rate_resnet(optimizer)
+    elif lr_scheduler_type == 'none':
+        scheduler = None
+    else:
+        raise ValueError('invalid lr_schduler=%s' % lr_scheduler_type)
 
-    # if C.get()['lr_schedule'].get('warmup', None):
-    #     scheduler = GradualWarmupScheduler(
-    #         optimizer,
-    #         multiplier=C.get()['lr_schedule']['warmup']['multiplier'],
-    #         total_epoch=C.get()['lr_schedule']['warmup']['epoch'],
-    #         after_scheduler=scheduler
-    #     )
+    if C.get()['lr_schedule'].get('warmup', None):
+        scheduler = GradualWarmupScheduler(
+            optimizer,
+            multiplier=C.get()['lr_schedule']['warmup']['multiplier'],
+            total_epoch=C.get()['lr_schedule']['warmup']['epoch'],
+            after_scheduler=scheduler
+        )
 
     from torch.utils.tensorboard import SummaryWriter
     writers = [SummaryWriter(log_dir='./runs/{}/{}'.format(save_str, x)) for x in ['train', 'valid', 'test']]

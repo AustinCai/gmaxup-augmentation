@@ -1,0 +1,19 @@
+# best cnn
+model:
+  type: efficientnet
+dataset: cifar10
+aug: 'randaugment'
+randaug:
+  N: 1
+  M: 2    # from appendix
+cutout: 0
+batch: 128
+epoch: 15
+lr: 0.001
+lr_schedule:
+  type: 'none'
+optimizer:
+  type: adam
+  momentum: 0
+  decay: 0
+  nesterov: False

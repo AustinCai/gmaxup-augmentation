@@ -55,21 +55,24 @@ def show_images(writer, images, batch_size, title="Images", verbose=False):
     '''Displays the input images passed in through train_dl, both to the console
     and to tensorboard. 
     '''
-    start_time = time.time()
+    if verbose: 
+        start_time = time.time()
 
     images = images.view(batch_size, Constants.cifar10_dim[2], \
         Constants.cifar10_dim[0], Constants.cifar10_dim[1]) 
     norm_min, norm_max = -1, 1
-    img_grid = torchvision.utils.make_grid(images, normalize=True, range=(norm_min, norm_max))
-    if verbose: 
-        print("In visualize.show_images(title={}).".format(title))
-        print("    images.shape: {}.".format(images.shape))
-        print("    img_grid.shape: {}.".format(img_grid.shape))
+    img_grid = torchvision.utils.make_grid(
+        images, normalize=True, range=(norm_min, norm_max))
 
     # format_and_show(img_grid, one_channel=False)
     writer.add_image(title, img_grid)
 
-    print("    visualize.show_images() completed in {} seconds.".format(time.time() - start_time))
+    if verbose: 
+        print("In visualize.show_images(title={}).".format(title))
+        print("    images.shape: {}.".format(images.shape))
+        print("    img_grid.shape: {}.".format(img_grid.shape))
+        print("    visualize.show_images() completed in {} seconds.".format(
+            time.time() - start_time))
 
 
 def build_cifar10_ds(dataset_root_path="saved_data", 
@@ -145,16 +148,22 @@ def build_dl(augmentation_str, dataset_str, train_valid_split=0.85, shuffle=True
     valid_dl = []
     if train_valid_split < 1.0: 
         train_ds, valid_ds = torch.utils.data.random_split(
-            train_ds, [int(len(train_ds)*train_valid_split), len(train_ds) - int(len(train_ds)*train_valid_split)])
+            train_ds, 
+            [int(len(train_ds)*train_valid_split), len(train_ds) \
+            - int(len(train_ds)*train_valid_split)]
+        )
 
         valid_dl = torch.utils.data.DataLoader(
-            valid_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
+            valid_ds, batch_size=Constants.batch_size, shuffle=shuffle, 
+            drop_last=True, num_workers=32, pin_memory=True)
 
     train_dl = torch.utils.data.DataLoader(
-        train_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
+        train_ds, batch_size=Constants.batch_size, shuffle=shuffle, 
+        drop_last=True, num_workers=32, pin_memory=True)
 
     test_dl = torch.utils.data.DataLoader(
-        valid_test_ds, batch_size=Constants.batch_size, shuffle=shuffle, drop_last=True, num_workers=32, pin_memory=True)
+        valid_test_ds, batch_size=Constants.batch_size, shuffle=shuffle, 
+        drop_last=True, num_workers=32, pin_memory=True)
 
     if verbose:
         print("In data_loading.build_dl() with dataset \'{}\' and augmentation \'{}\'.".format(
