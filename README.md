@@ -1,5 +1,5 @@
-Code almost entirely from https://github.com/ildoonet/pytorch-randaugment.
-I expect to accumulate significant changes, but right now most code is identical to the source. 
+Forked from https://github.com/ildoonet/pytorch-randaugment.
+I expect to accumulate significant changes, but right now most code is very similar to the source. 
 
 Everything below from the original repo ================================
 
